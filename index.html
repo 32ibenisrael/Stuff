@@ -3,37 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Rooftop Runner</title>
+    <title>Stickman Parkour</title>
     <style>
         body {
             margin: 0;
             background: #0a0a0a;
             color: #fff;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            height: 100vh;
             overflow: hidden;
         }
         canvas {
-            border-bottom: 4px solid #00f2ff;
-            background: linear-gradient(to bottom, #000428, #004e92);
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
-            margin-top: 20px;
+            background: #111;
+            border: 2px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
-        .ui {
+        .hud {
             position: absolute;
-            top: 40px;
-            font-size: 24px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            top: 20px;
+            font-size: 2rem;
+            font-weight: bold;
             text-shadow: 0 0 10px #00f2ff;
+        }
+        .controls {
+            margin-top: 15px;
+            color: #888;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-    <div class="ui">Score: <span id="score">0</span></div>
+
+    <div class="hud">SCORE: <span id="score">0</span></div>
     <canvas id="gameCanvas"></canvas>
+    <div class="controls">Press SPACE to Jump</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -41,76 +49,113 @@
         const scoreElement = document.getElementById('score');
 
         canvas.width = 800;
-        canvas.height = 400;
+        canvas.height = 300;
 
-        // Game State
+        // Game Constants
+        const GROUND_Y = canvas.height - 20;
         let score = 0;
         let gameActive = true;
+        let gameSpeed = 5;
 
-        // Player Object
         const player = {
-            x: 50,
-            y: 300,
-            w: 30,
-            h: 50,
+            x: 80,
+            y: 0,
+            w: 20, 
+            h: 55,
             dy: 0,
             jumpForce: 12,
             gravity: 0.6,
             grounded: false,
-            color: '#00f2ff'
+            frame: 0
         };
 
-        // Obstacles
         const obstacles = [];
         let spawnTimer = 0;
 
-        function spawnObstacle() {
-            obstacles.push({
-                x: canvas.width,
-                y: canvas.height - 40,
-                w: 20 + Math.random() * 30,
-                h: 40,
-                speed: 5 + (score / 500) // Gradually speed up
-            });
+        function drawStickman(x, y) {
+            ctx.strokeStyle = "#00f2ff";
+            ctx.lineWidth = 4;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+
+            // Head
+            ctx.arc(x + 10, y + 10, 7, 0, Math.PI * 2);
+
+            // Torso
+            ctx.moveTo(x + 10, y + 17);
+            ctx.lineTo(x + 10, y + 35);
+
+            // Arms
+            let armWave = Math.sin(player.frame * 0.15) * 10;
+            if (!player.grounded) armWave = -15; // Raised arms in air
+            
+            ctx.moveTo(x - 5, y + 25 + armWave);
+            ctx.lineTo(x + 10, y + 22);
+            ctx.lineTo(x + 25, y + 25 - armWave);
+
+            // Legs
+            if (player.grounded) {
+                let legMove = Math.sin(player.frame * 0.2) * 12;
+                // Leg 1
+                ctx.moveTo(x + 10, y + 35);
+                ctx.lineTo(x + 10 + legMove, y + 55);
+                // Leg 2
+                ctx.moveTo(x + 10, y + 35);
+                ctx.lineTo(x + 10 - legMove, y + 55);
+            } else {
+                // Tuck legs while jumping
+                ctx.moveTo(x + 10, y + 35);
+                ctx.lineTo(x + 2, y + 45);
+                ctx.moveTo(x + 10, y + 35);
+                ctx.lineTo(x + 18, y + 45);
+            }
+
+            ctx.stroke();
         }
 
         function update() {
             if (!gameActive) return;
 
-            // Gravity & Movement
+            player.frame++;
             player.dy += player.gravity;
             player.y += player.dy;
 
-            // Floor Collision
-            if (player.y + player.h > canvas.height) {
-                player.y = canvas.height - player.h;
+            // Collision with Ground
+            if (player.y + player.h > GROUND_Y) {
+                player.y = GROUND_Y - player.h;
                 player.dy = 0;
                 player.grounded = true;
             }
 
-            // Obstacle Logic
+            // Spawn Obstacles
             spawnTimer++;
-            if (spawnTimer > 70 + Math.random() * 50) {
-                spawnObstacle();
+            if (spawnTimer > Math.max(40, 80 - (score / 100))) {
+                obstacles.push({
+                    x: canvas.width,
+                    y: GROUND_Y - 25,
+                    w: 15,
+                    h: 25
+                });
                 spawnTimer = 0;
             }
 
-            obstacles.forEach((obs, index) => {
-                obs.x -= obs.speed;
+            // Move Obstacles
+            obstacles.forEach((obs, i) => {
+                obs.x -= gameSpeed + (score / 1000);
 
-                // Collision Detection
-                if (
-                    player.x < obs.x + obs.w &&
+                // Hitbox detection
+                if (player.x < obs.x + obs.w &&
                     player.x + player.w > obs.x &&
                     player.y < obs.y + obs.h &&
-                    player.y + player.h > obs.y
-                ) {
-                    gameOver();
+                    player.y + player.h > obs.y) {
+                    gameActive = false;
+                    alert("Game Over! Score: " + score);
+                    location.reload();
                 }
 
-                // Remove off-screen obstacles
+                // Cleanup and Scoring
                 if (obs.x + obs.w < 0) {
-                    obstacles.splice(index, 1);
+                    obstacles.splice(i, 1);
                     score += 10;
                     scoreElement.innerText = score;
                 }
@@ -120,35 +165,34 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Draw Ground
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, GROUND_Y);
+            ctx.lineTo(canvas.width, GROUND_Y);
+            ctx.stroke();
+
             // Draw Player
-            ctx.fillStyle = player.color;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = player.color;
-            ctx.fillRect(player.x, player.y, player.w, player.h);
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#00f2ff";
+            drawStickman(player.x, player.y);
 
             // Draw Obstacles
-            ctx.fillStyle = '#ff0055';
-            ctx.shadowColor = '#ff0055';
+            ctx.fillStyle = "#ff0055";
+            ctx.shadowColor = "#ff0055";
             obstacles.forEach(obs => {
                 ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
             });
-
-            ctx.shadowBlur = 0; // Reset blur for performance
+            ctx.shadowBlur = 0;
         }
 
-        function gameOver() {
-            gameActive = false;
-            alert(`Game Over! Score: ${score}`);
-            location.reload();
-        }
-
-        function gameLoop() {
+        function loop() {
             update();
             draw();
-            requestAnimationFrame(gameLoop);
+            requestAnimationFrame(loop);
         }
 
-        // Controls
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && player.grounded) {
                 player.dy = -player.jumpForce;
@@ -156,15 +200,7 @@
             }
         });
 
-        // Touch support
-        window.addEventListener('touchstart', () => {
-            if (player.grounded) {
-                player.dy = -player.jumpForce;
-                player.grounded = false;
-            }
-        });
-
-        gameLoop();
+        loop();
     </script>
 </body>
 </html>
