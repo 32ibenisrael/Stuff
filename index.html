@@ -3,178 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JS-Craft Rip-off</title>
+    <title>Neon Rooftop Runner</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
-        #crosshair {
-            position: absolute; top: 50%; left: 50%;
-            width: 20px; height: 20px;
-            border: 2px solid white; border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none; mix-blend-mode: difference;
+        body {
+            margin: 0;
+            background: #0a0a0a;
+            color: #fff;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
         }
-        #instructions {
-            position: absolute; top: 10px; left: 10px;
-            color: white; background: rgba(0,0,0,0.5); padding: 10px;
-            pointer-events: none;
+        canvas {
+            border-bottom: 4px solid #00f2ff;
+            background: linear-gradient(to bottom, #000428, #004e92);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+            margin-top: 20px;
+        }
+        .ui {
+            position: absolute;
+            top: 40px;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #00f2ff;
         }
     </style>
 </head>
 <body>
-    <div id="crosshair"></div>
-    <div id="instructions">
-        <b>WASD</b> to Move | <b>Space</b> to Jump<br>
-        <b>Click</b> to Lock Mouse & Break Blocks<br>
-        <b>Right Click</b> to Place Blocks
-    </div>
+    <div class="ui">Score: <span id="score">0</span></div>
+    <canvas id="gameCanvas"></canvas>
 
-    <!-- Load Three.js from CDN -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+        canvas.width = 800;
+        canvas.height = 400;
 
-        // --- SETUP SCENE ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87ceeb); // Sky blue
-        scene.fog = new THREE.Fog(0x87ceeb, 0, 50);
+        // Game State
+        let score = 0;
+        let gameActive = true;
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // --- LIGHTING ---
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-        const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        sunLight.position.set(10, 20, 10);
-        scene.add(sunLight);
-
-        // --- CONTROLS ---
-        const controls = new PointerLockControls(camera, document.body);
-        document.addEventListener('click', () => controls.lock());
-
-        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, canJump = false;
-        const velocity = new THREE.Vector3();
-        const direction = new THREE.Vector3();
-
-        const onKeyDown = (event) => {
-            switch (event.code) {
-                case 'KeyW': moveForward = true; break;
-                case 'KeyA': moveLeft = true; break;
-                case 'KeyS': moveBackward = true; break;
-                case 'KeyD': moveRight = true; break;
-                case 'Space': if (canJump === true) velocity.y += 5; canJump = false; break;
-            }
+        // Player Object
+        const player = {
+            x: 50,
+            y: 300,
+            w: 30,
+            h: 50,
+            dy: 0,
+            jumpForce: 12,
+            gravity: 0.6,
+            grounded: false,
+            color: '#00f2ff'
         };
-        const onKeyUp = (event) => {
-            switch (event.code) {
-                case 'KeyW': moveForward = false; break;
-                case 'KeyA': moveLeft = false; break;
-                case 'KeyS': moveBackward = false; break;
-                case 'KeyD': moveRight = false; break;
-            }
-        };
-        document.addEventListener('keydown', onKeyDown);
-        document.addEventListener('keyup', onKeyUp);
 
-        // --- WORLD BUILDING ---
-        const objects = [];
-        const boxGeo = new THREE.BoxGeometry(1, 1, 1);
-        const grassMat = new THREE.MeshLambertMaterial({ color: 0x44aa44 });
+        // Obstacles
+        const obstacles = [];
+        let spawnTimer = 0;
 
-        // Generate a 20x20 floor
-        for (let x = -10; x < 10; x++) {
-            for (let z = -10; z < 10; z++) {
-                const cube = new THREE.Mesh(boxGeo, grassMat);
-                cube.position.set(x, 0, z);
-                scene.add(cube);
-                objects.push(cube);
-            }
+        function spawnObstacle() {
+            obstacles.push({
+                x: canvas.width,
+                y: canvas.height - 40,
+                w: 20 + Math.random() * 30,
+                h: 40,
+                speed: 5 + (score / 500) // Gradually speed up
+            });
         }
 
-        camera.position.y = 2; // Start player above ground
+        function update() {
+            if (!gameActive) return;
 
-        // --- BLOCK BREAKING / PLACING ---
-        const raycaster = new THREE.Raycaster();
-        document.addEventListener('mousedown', (event) => {
-            if (!controls.isLocked) return;
+            // Gravity & Movement
+            player.dy += player.gravity;
+            player.y += player.dy;
 
-            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-            const intersects = raycaster.intersectObjects(objects);
+            // Floor Collision
+            if (player.y + player.h > canvas.height) {
+                player.y = canvas.height - player.h;
+                player.dy = 0;
+                player.grounded = true;
+            }
 
-            if (intersects.length > 0) {
-                const intersect = intersects[0];
+            // Obstacle Logic
+            spawnTimer++;
+            if (spawnTimer > 70 + Math.random() * 50) {
+                spawnObstacle();
+                spawnTimer = 0;
+            }
 
-                if (event.button === 0) { // Left Click: Break
-                    scene.remove(intersect.object);
-                    objects.splice(objects.indexOf(intersect.object), 1);
-                } else if (event.button === 2) { // Right Click: Place
-                    const newCube = new THREE.Mesh(boxGeo, new THREE.MeshLambertMaterial({ color: 0x8b4513 }));
-                    // Find position based on face normal
-                    newCube.position.copy(intersect.object.position).add(intersect.face.normal);
-                    scene.add(newCube);
-                    objects.push(newCube);
+            obstacles.forEach((obs, index) => {
+                obs.x -= obs.speed;
+
+                // Collision Detection
+                if (
+                    player.x < obs.x + obs.w &&
+                    player.x + player.w > obs.x &&
+                    player.y < obs.y + obs.h &&
+                    player.y + player.h > obs.y
+                ) {
+                    gameOver();
                 }
+
+                // Remove off-screen obstacles
+                if (obs.x + obs.w < 0) {
+                    obstacles.splice(index, 1);
+                    score += 10;
+                    scoreElement.innerText = score;
+                }
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Player
+            ctx.fillStyle = player.color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = player.color;
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+
+            // Draw Obstacles
+            ctx.fillStyle = '#ff0055';
+            ctx.shadowColor = '#ff0055';
+            obstacles.forEach(obs => {
+                ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+            });
+
+            ctx.shadowBlur = 0; // Reset blur for performance
+        }
+
+        function gameOver() {
+            gameActive = false;
+            alert(`Game Over! Score: ${score}`);
+            location.reload();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Controls
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && player.grounded) {
+                player.dy = -player.jumpForce;
+                player.grounded = false;
             }
         });
 
-        // Prevent context menu on right click
-        document.addEventListener('contextmenu', e => e.preventDefault());
-
-        // --- GAME LOOP ---
-        let prevTime = performance.now();
-        function animate() {
-            requestAnimationFrame(animate);
-
-            const time = performance.now();
-            if (controls.isLocked) {
-                const delta = (time - prevTime) / 1000;
-
-                // Friction/Damping
-                velocity.x -= velocity.x * 10.0 * delta;
-                velocity.z -= velocity.z * 10.0 * delta;
-                velocity.y -= 9.8 * 1.5 * delta; // Gravity
-
-                direction.z = Number(moveForward) - Number(moveBackward);
-                direction.x = Number(moveRight) - Number(moveLeft);
-                direction.normalize();
-
-                if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * delta;
-                if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * delta;
-
-                controls.moveRight(-velocity.x * delta);
-                controls.moveForward(-velocity.z * delta);
-                controls.getObject().position.y += (velocity.y * delta);
-
-                // Simple Floor Collision
-                if (controls.getObject().position.y < 2) {
-                    velocity.y = 0;
-                    controls.getObject().position.y = 2;
-                    canJump = true;
-                }
+        // Touch support
+        window.addEventListener('touchstart', () => {
+            if (player.grounded) {
+                player.dy = -player.jumpForce;
+                player.grounded = false;
             }
-            prevTime = time;
-            renderer.render(scene, camera);
-        }
-
-        animate();
-
-        // Handle Resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        gameLoop();
     </script>
 </body>
 </html>
