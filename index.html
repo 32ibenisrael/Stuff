@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Stickman Blaster</title>
+    <title>Neon Stickman: Blaster Edition</title>
     <style>
         :root {
             --neon-blue: #00f3ff;
             --neon-pink: #ff00ff;
             --neon-green: #39ff14;
+            --neon-orange: #ff6700;
             --bg-color: #0d0d0d;
         }
 
@@ -25,6 +26,29 @@
             overflow: hidden;
         }
 
+        /* Speed Controls */
+        #speed-controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 5px 15px;
+            cursor: pointer;
+            box-shadow: 0 0 5px var(--neon-blue);
+            transition: 0.2s;
+        }
+
+        button:hover, button.active {
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
         #game-container {
             position: relative;
             width: 800px;
@@ -34,23 +58,13 @@
             overflow: hidden;
         }
 
-        /* Stickman Figure */
+        /* Improved Stickman & Realistic Blaster */
         #dino {
             position: absolute;
             bottom: 0;
             left: 50px;
             width: 40px;
             height: 60px;
-        }
-
-        .stickman-body {
-            position: absolute;
-            width: 2px;
-            height: 30px;
-            background: var(--neon-pink);
-            left: 50%;
-            bottom: 15px;
-            box-shadow: 0 0 8px var(--neon-pink);
         }
 
         .stickman-head {
@@ -64,18 +78,63 @@
             box-shadow: 0 0 8px var(--neon-pink);
         }
 
-        /* Nerf Gun */
-        .gun {
+        .stickman-body {
             position: absolute;
-            width: 15px;
-            height: 6px;
-            background: var(--neon-green);
-            right: -10px;
-            top: 25px;
-            box-shadow: 0 0 5px var(--neon-green);
+            width: 2px;
+            height: 25px;
+            background: var(--neon-pink);
+            left: 50%;
+            bottom: 20px;
+            box-shadow: 0 0 8px var(--neon-pink);
         }
 
-        /* Obstacles & Enemies */
+        /* The Realistic Blaster */
+        .blaster {
+            position: absolute;
+            right: -15px;
+            top: 5px;
+            width: 25px;
+            height: 12px;
+        }
+
+        .gun-barrel {
+            width: 20px;
+            height: 6px;
+            background: #444;
+            border: 1px solid var(--neon-green);
+            position: absolute;
+            top: 0;
+        }
+
+        .gun-tip {
+            width: 4px;
+            height: 6px;
+            background: var(--neon-orange);
+            position: absolute;
+            right: -4px;
+            top: 0;
+        }
+
+        .gun-handle {
+            width: 4px;
+            height: 8px;
+            background: #444;
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            transform: rotate(20deg);
+        }
+
+        /* Projectiles & Enemies */
+        .bullet {
+            position: absolute;
+            width: 8px;
+            height: 4px;
+            background: var(--neon-orange);
+            border-radius: 2px;
+            box-shadow: 0 0 8px var(--neon-orange);
+        }
+
         .cactus {
             position: absolute;
             bottom: 0;
@@ -87,60 +146,65 @@
 
         .enemy {
             position: absolute;
-            width: 25px;
-            height: 25px;
-            border: 2px dashed #ff4d4d;
-            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ff4d4d;
+            background: rgba(255, 77, 77, 0.2);
             box-shadow: 0 0 10px #ff4d4d;
-            animation: rotate 1s linear infinite;
         }
-
-        .bullet {
-            position: absolute;
-            width: 10px;
-            height: 4px;
-            background: var(--neon-green);
-            box-shadow: 0 0 10px var(--neon-green);
-        }
-
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         #score-board { margin-bottom: 10px; font-size: 24px; }
         .jump-animation { animation: jump 0.5s ease-out; }
         @keyframes jump {
             0% { bottom: 0; }
-            50% { bottom: 120px; }
+            50% { bottom: 130px; }
             100% { bottom: 0; }
         }
     </style>
 </head>
 <body>
 
-    <div id="score-board">Score: 0 | High Score: <span id="high-score">0</span></div>
+    <div id="speed-controls">
+        <button onclick="setSpeed(0.5)">0.5x</button>
+        <button class="active" onclick="setSpeed(1)">1x</button>
+        <button onclick="setSpeed(2)">2x</button>
+        <button onclick="setSpeed(3)">3x</button>
+    </div>
+
+    <div id="score-board">Score: 0 | High: <span id="high-score">0</span></div>
     
     <div id="game-container">
         <div id="dino">
             <div class="stickman-head"></div>
             <div class="stickman-body">
-                <div class="gun"></div>
+                <div class="blaster">
+                    <div class="gun-barrel"></div>
+                    <div class="gun-tip"></div>
+                    <div class="gun-handle"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div style="margin-top: 15px;"><b>SPACE</b> to Jump | <b>S</b> or <b>ENTER</b> to Shoot</div>
+    <div style="margin-top: 15px;"><b>SPACE</b> Jump | <b>S/ENTER</b> Shoot</div>
 
     <script>
         const dino = document.getElementById("dino");
         const container = document.getElementById("game-container");
         const scoreElement = document.getElementById("score-board");
-        const highScoreElement = document.getElementById("high-score");
-
+        
         let score = 0;
-        let highScore = localStorage.getItem("stickmanHighScore") || 0;
-        highScoreElement.textContent = highScore;
+        let gameSpeed = 1;
         let isGameOver = false;
 
-        // Jump & Shoot Events
+        function setSpeed(s) {
+            gameSpeed = s;
+            document.querySelectorAll('button').forEach(btn => {
+                btn.classList.remove('active');
+                if(parseFloat(btn.innerText) === s) btn.classList.add('active');
+            });
+        }
+
         document.addEventListener("keydown", (e) => {
             if (e.code === "Space") jump();
             if (e.code === "KeyS" || e.code === "Enter") shoot();
@@ -158,89 +222,79 @@
             const bullet = document.createElement("div");
             bullet.classList.add("bullet");
             
-            const dinoRect = dino.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            
-            bullet.style.left = "90px";
-            bullet.style.top = (dino.offsetTop + 25) + "px";
+            // Offset bullet to match gun tip
+            bullet.style.left = "85px";
+            bullet.style.top = (dino.offsetTop + 10) + "px";
             container.appendChild(bullet);
 
-            let bulletPos = 90;
-            let bulletTimer = setInterval(() => {
-                bulletPos += 10;
-                bullet.style.left = bulletPos + "px";
+            let pos = 85;
+            let timer = setInterval(() => {
+                pos += (12 * gameSpeed);
+                bullet.style.left = pos + "px";
 
-                // Hit detection
-                document.querySelectorAll(".enemy").forEach(enemy => {
-                    if (isColliding(bullet, enemy)) {
-                        enemy.remove();
+                document.querySelectorAll(".enemy").forEach(en => {
+                    if (checkHit(bullet, en)) {
+                        en.remove();
                         bullet.remove();
-                        clearInterval(bulletTimer);
-                        score += 5;
-                        updateScore();
+                        clearInterval(timer);
+                        score += 10;
+                        updateUI();
                     }
                 });
 
-                if (bulletPos > 800) {
-                    clearInterval(bulletTimer);
-                    bullet.remove();
-                }
-            }, 10);
+                if (pos > 800) { clearInterval(timer); bullet.remove(); }
+            }, 20);
         }
 
-        function createObstacle() {
+        function spawn() {
             if (isGameOver) return;
-
-            const type = Math.random() > 0.5 ? 'cactus' : 'enemy';
+            const type = Math.random() > 0.6 ? 'enemy' : 'cactus';
             const obj = document.createElement("div");
             obj.classList.add(type);
             
             let pos = 800;
             obj.style.left = pos + "px";
-            if (type === 'enemy') obj.style.bottom = (Math.random() * 80 + 20) + "px";
+            if (type === 'enemy') obj.style.bottom = (Math.random() * 100 + 30) + "px";
             
             container.appendChild(obj);
 
             let timer = setInterval(() => {
                 if (isGameOver) { clearInterval(timer); return; }
-                
-                pos -= 7;
+                pos -= (7 * gameSpeed);
                 obj.style.left = pos + "px";
 
-                if (isColliding(dino, obj)) gameOver();
+                if (checkHit(dino, obj)) endGame();
 
                 if (pos < -50) {
                     clearInterval(timer);
                     obj.remove();
                     score++;
-                    updateScore();
+                    updateUI();
                 }
             }, 20);
 
-            setTimeout(createObstacle, Math.random() * 1000 + 800);
+            setTimeout(spawn, (Math.random() * 1000 + 800) / gameSpeed);
         }
 
-        function isColliding(a, b) {
-            let aR = a.getBoundingClientRect();
-            let bR = b.getBoundingClientRect();
-            return !(aR.right < bR.left || aR.left > bR.right || aR.bottom < bR.top || aR.top > bR.bottom);
+        function checkHit(a, b) {
+            let r1 = a.getBoundingClientRect();
+            let r2 = b.getBoundingClientRect();
+            return !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
         }
 
-        function updateScore() {
-            scoreElement.innerHTML = `Score: ${score} | High Score: ${highScore}`;
+        function updateUI() {
+            scoreElement.innerHTML = `Score: ${score} | High: ${localStorage.getItem("nerfHS") || 0}`;
         }
 
-        function gameOver() {
+        function endGame() {
             isGameOver = true;
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem("stickmanHighScore", highScore);
-            }
+            let hs = localStorage.getItem("nerfHS") || 0;
+            if (score > hs) localStorage.setItem("nerfHS", score);
             alert("WASTED! Score: " + score);
             location.reload();
         }
 
-        createObstacle();
+        spawn();
     </script>
 </body>
 </html>
