@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Dino Runner</title>
+    <title>Neon Stickman Blaster</title>
     <style>
         :root {
             --neon-blue: #00f3ff;
             --neon-pink: #ff00ff;
+            --neon-green: #39ff14;
             --bg-color: #0d0d0d;
         }
 
@@ -20,61 +21,96 @@
             justify-content: center;
             height: 100vh;
             color: var(--neon-blue);
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Courier New', sans-serif;
             overflow: hidden;
         }
 
         #game-container {
             position: relative;
             width: 800px;
-            height: 200px;
-            border-bottom: 2px solid var(--neon-blue);
+            height: 250px;
+            border-bottom: 3px solid var(--neon-blue);
             box-shadow: 0 10px 20px -10px var(--neon-blue);
             overflow: hidden;
         }
 
+        /* Stickman Figure */
         #dino {
             position: absolute;
             bottom: 0;
             left: 50px;
             width: 40px;
-            height: 40px;
-            border: 2px solid var(--neon-pink);
-            box-shadow: 0 0 10px var(--neon-pink);
-            background: rgba(255, 0, 255, 0.1);
+            height: 60px;
         }
 
+        .stickman-body {
+            position: absolute;
+            width: 2px;
+            height: 30px;
+            background: var(--neon-pink);
+            left: 50%;
+            bottom: 15px;
+            box-shadow: 0 0 8px var(--neon-pink);
+        }
+
+        .stickman-head {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--neon-pink);
+            border-radius: 50%;
+            top: 2px;
+            left: 13px;
+            box-shadow: 0 0 8px var(--neon-pink);
+        }
+
+        /* Nerf Gun */
+        .gun {
+            position: absolute;
+            width: 15px;
+            height: 6px;
+            background: var(--neon-green);
+            right: -10px;
+            top: 25px;
+            box-shadow: 0 0 5px var(--neon-green);
+        }
+
+        /* Obstacles & Enemies */
         .cactus {
             position: absolute;
             bottom: 0;
-            right: -50px;
-            width: 25px;
-            height: 50px;
+            width: 20px;
+            height: 40px;
             border: 2px solid var(--neon-blue);
-            box-shadow: 0 0 10px var(--neon-blue);
             background: rgba(0, 243, 255, 0.1);
         }
 
-        #score-board {
-            margin-top: 20px;
-            font-size: 24px;
-            text-shadow: 0 0 5px var(--neon-blue);
+        .enemy {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border: 2px dashed #ff4d4d;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff4d4d;
+            animation: rotate 1s linear infinite;
         }
 
-        .jump-animation {
-            animation: jump 0.5s linear;
+        .bullet {
+            position: absolute;
+            width: 10px;
+            height: 4px;
+            background: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-green);
         }
 
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        #score-board { margin-bottom: 10px; font-size: 24px; }
+        .jump-animation { animation: jump 0.5s ease-out; }
         @keyframes jump {
             0% { bottom: 0; }
-            30% { bottom: 100px; }
-            70% { bottom: 100px; }
+            50% { bottom: 120px; }
             100% { bottom: 0; }
-        }
-
-        #instructions {
-            margin-top: 10px;
-            opacity: 0.7;
         }
     </style>
 </head>
@@ -83,10 +119,15 @@
     <div id="score-board">Score: 0 | High Score: <span id="high-score">0</span></div>
     
     <div id="game-container">
-        <div id="dino"></div>
+        <div id="dino">
+            <div class="stickman-head"></div>
+            <div class="stickman-body">
+                <div class="gun"></div>
+            </div>
+        </div>
     </div>
 
-    <div id="instructions">Press <b>SPACE</b> or <b>CLICK</b> to Jump</div>
+    <div style="margin-top: 15px;"><b>SPACE</b> to Jump | <b>S</b> or <b>ENTER</b> to Shoot</div>
 
     <script>
         const dino = document.getElementById("dino");
@@ -95,68 +136,94 @@
         const highScoreElement = document.getElementById("high-score");
 
         let score = 0;
-        let highScore = localStorage.getItem("dinoHighScore") || 0;
+        let highScore = localStorage.getItem("stickmanHighScore") || 0;
         highScoreElement.textContent = highScore;
-
         let isGameOver = false;
 
-        // Jump Logic
+        // Jump & Shoot Events
+        document.addEventListener("keydown", (e) => {
+            if (e.code === "Space") jump();
+            if (e.code === "KeyS" || e.code === "Enter") shoot();
+        });
+
         function jump() {
-            if (isGameOver) {
-                resetGame();
-                return;
-            }
-            if (!dino.classList.contains("jump-animation")) {
+            if (!dino.classList.contains("jump-animation") && !isGameOver) {
                 dino.classList.add("jump-animation");
-                setTimeout(() => {
-                    dino.classList.remove("jump-animation");
-                }, 500);
+                setTimeout(() => dino.classList.remove("jump-animation"), 500);
             }
         }
 
-        document.addEventListener("keydown", (e) => {
-            if (e.code === "Space") jump();
-        });
-
-        document.addEventListener("mousedown", jump);
-
-        // Obstacle Logic
-        function createCactus() {
+        function shoot() {
             if (isGameOver) return;
+            const bullet = document.createElement("div");
+            bullet.classList.add("bullet");
+            
+            const dinoRect = dino.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            bullet.style.left = "90px";
+            bullet.style.top = (dino.offsetTop + 25) + "px";
+            container.appendChild(bullet);
 
-            const cactus = document.createElement("div");
-            cactus.classList.add("cactus");
-            container.appendChild(cactus);
+            let bulletPos = 90;
+            let bulletTimer = setInterval(() => {
+                bulletPos += 10;
+                bullet.style.left = bulletPos + "px";
 
-            let position = 800;
-            let randomSpeed = 5 + Math.random() * 5; // Random speed for variety
-
-            let timer = setInterval(() => {
-                // Collision Detection
-                let dinoTop = parseInt(window.getComputedStyle(dino).getPropertyValue("top"));
-                let cactusLeft = parseInt(window.getComputedStyle(cactus).getPropertyValue("left"));
-
-                if (cactusLeft > 50 && cactusLeft < 90 && dinoTop >= 150) {
-                    gameOver();
-                    clearInterval(timer);
-                }
-
-                if (position < -50) {
-                    clearInterval(timer);
-                    container.removeChild(cactus);
-                    if (!isGameOver) {
-                        score++;
+                // Hit detection
+                document.querySelectorAll(".enemy").forEach(enemy => {
+                    if (isColliding(bullet, enemy)) {
+                        enemy.remove();
+                        bullet.remove();
+                        clearInterval(bulletTimer);
+                        score += 5;
                         updateScore();
                     }
-                }
+                });
 
-                position -= randomSpeed;
-                cactus.style.left = position + "px";
+                if (bulletPos > 800) {
+                    clearInterval(bulletTimer);
+                    bullet.remove();
+                }
+            }, 10);
+        }
+
+        function createObstacle() {
+            if (isGameOver) return;
+
+            const type = Math.random() > 0.5 ? 'cactus' : 'enemy';
+            const obj = document.createElement("div");
+            obj.classList.add(type);
+            
+            let pos = 800;
+            obj.style.left = pos + "px";
+            if (type === 'enemy') obj.style.bottom = (Math.random() * 80 + 20) + "px";
+            
+            container.appendChild(obj);
+
+            let timer = setInterval(() => {
+                if (isGameOver) { clearInterval(timer); return; }
+                
+                pos -= 7;
+                obj.style.left = pos + "px";
+
+                if (isColliding(dino, obj)) gameOver();
+
+                if (pos < -50) {
+                    clearInterval(timer);
+                    obj.remove();
+                    score++;
+                    updateScore();
+                }
             }, 20);
 
-            // Randomize next obstacle spawn
-            let nextSpawn = Math.random() * (2000 - 700) + 700;
-            setTimeout(createCactus, nextSpawn);
+            setTimeout(createObstacle, Math.random() * 1000 + 800);
+        }
+
+        function isColliding(a, b) {
+            let aR = a.getBoundingClientRect();
+            let bR = b.getBoundingClientRect();
+            return !(aR.right < bR.left || aR.left > bR.right || aR.bottom < bR.top || aR.top > bR.bottom);
         }
 
         function updateScore() {
@@ -167,18 +234,13 @@
             isGameOver = true;
             if (score > highScore) {
                 highScore = score;
-                localStorage.setItem("dinoHighScore", highScore);
+                localStorage.setItem("stickmanHighScore", highScore);
             }
-            alert(`GAME OVER! Final Score: ${score}\nPress OK to restart.`);
-            resetGame();
-        }
-
-        function resetGame() {
+            alert("WASTED! Score: " + score);
             location.reload();
         }
 
-        // Start Game
-        createCactus();
+        createObstacle();
     </script>
 </body>
 </html>
