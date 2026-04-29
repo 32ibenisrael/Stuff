@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Stickman: Blaster Edition</title>
+    <title>Neon Pandemic Runner</title>
     <style>
         :root {
             --neon-blue: #00f3ff;
             --neon-pink: #ff00ff;
             --neon-green: #39ff14;
             --neon-orange: #ff6700;
-            --bg-color: #0d0d0d;
+            --covid-red: #ff0033;
+            --bg-color: #050505;
         }
 
         body {
@@ -22,11 +23,10 @@
             justify-content: center;
             height: 100vh;
             color: var(--neon-blue);
-            font-family: 'Courier New', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
         }
 
-        /* Speed Controls */
         #speed-controls {
             margin-bottom: 15px;
             display: flex;
@@ -34,48 +34,49 @@
         }
 
         button {
-            background: transparent;
+            background: rgba(0, 243, 255, 0.1);
             border: 1px solid var(--neon-blue);
             color: var(--neon-blue);
-            padding: 5px 15px;
+            padding: 8px 16px;
             cursor: pointer;
-            box-shadow: 0 0 5px var(--neon-blue);
+            text-transform: uppercase;
+            font-weight: bold;
             transition: 0.2s;
         }
 
         button:hover, button.active {
             background: var(--neon-blue);
             color: black;
-            box-shadow: 0 0 15px var(--neon-blue);
+            box-shadow: 0 0 20px var(--neon-blue);
         }
 
         #game-container {
             position: relative;
             width: 800px;
-            height: 250px;
-            border-bottom: 3px solid var(--neon-blue);
-            box-shadow: 0 10px 20px -10px var(--neon-blue);
+            height: 300px;
+            border-bottom: 4px solid var(--neon-blue);
+            background: linear-gradient(to bottom, transparent 80%, rgba(0, 243, 255, 0.05));
             overflow: hidden;
         }
 
-        /* Improved Stickman & Realistic Blaster */
+        /* Stickman & Gun */
         #dino {
             position: absolute;
             bottom: 0;
-            left: 50px;
+            left: 60px;
             width: 40px;
             height: 60px;
+            will-change: transform;
         }
 
         .stickman-head {
             position: absolute;
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border: 2px solid var(--neon-pink);
             border-radius: 50%;
-            top: 2px;
-            left: 13px;
-            box-shadow: 0 0 8px var(--neon-pink);
+            top: 0; left: 11px;
+            box-shadow: 0 0 10px var(--neon-pink);
         }
 
         .stickman-body {
@@ -83,83 +84,65 @@
             width: 2px;
             height: 25px;
             background: var(--neon-pink);
-            left: 50%;
-            bottom: 20px;
-            box-shadow: 0 0 8px var(--neon-pink);
+            left: 19px; top: 16px;
+            box-shadow: 0 0 10px var(--neon-pink);
         }
 
-        /* The Realistic Blaster */
         .blaster {
             position: absolute;
-            right: -15px;
-            top: 5px;
-            width: 25px;
-            height: 12px;
+            left: 2px; top: 5px;
+            width: 30px; height: 10px;
         }
 
-        .gun-barrel {
-            width: 20px;
-            height: 6px;
-            background: #444;
-            border: 1px solid var(--neon-green);
-            position: absolute;
-            top: 0;
-        }
+        .gun-barrel { width: 22px; height: 6px; background: #555; border: 1px solid var(--neon-green); position: absolute; }
+        .gun-tip { width: 5px; height: 6px; background: var(--neon-orange); position: absolute; right: -5px; }
 
-        .gun-tip {
-            width: 4px;
-            height: 6px;
-            background: var(--neon-orange);
-            position: absolute;
-            right: -4px;
-            top: 0;
-        }
-
-        .gun-handle {
-            width: 4px;
-            height: 8px;
-            background: #444;
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            transform: rotate(20deg);
-        }
-
-        /* Projectiles & Enemies */
-        .bullet {
-            position: absolute;
-            width: 8px;
-            height: 4px;
-            background: var(--neon-orange);
-            border-radius: 2px;
-            box-shadow: 0 0 8px var(--neon-orange);
-        }
-
-        .cactus {
+        /* Spike Visuals */
+        .spike {
             position: absolute;
             bottom: 0;
-            width: 20px;
-            height: 40px;
-            border: 2px solid var(--neon-blue);
-            background: rgba(0, 243, 255, 0.1);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 40px solid var(--neon-blue);
+            filter: drop-shadow(0 0 8px var(--neon-blue));
         }
 
-        .enemy {
+        /* COVID-19 Visuals */
+        .covid {
             position: absolute;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #ff4d4d;
-            background: rgba(255, 77, 77, 0.2);
-            box-shadow: 0 0 10px #ff4d4d;
+            width: 30px;
+            height: 30px;
+            background: var(--covid-red);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--covid-red);
+            animation: pulse 1.5s infinite ease-in-out;
         }
 
-        #score-board { margin-bottom: 10px; font-size: 24px; }
-        .jump-animation { animation: jump 0.5s ease-out; }
-        @keyframes jump {
-            0% { bottom: 0; }
-            50% { bottom: 130px; }
-            100% { bottom: 0; }
+        .covid::before, .covid::after {
+            content: '';
+            position: absolute;
+            background: var(--covid-red);
+            width: 140%; height: 4px;
+            top: 45%; left: -20%;
         }
+        .covid::after { transform: rotate(90deg); }
+
+        .bullet {
+            position: absolute;
+            width: 12px; height: 4px;
+            background: var(--neon-orange);
+            border-radius: 2px;
+            box-shadow: 0 0 10px var(--neon-orange);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        #score-board { margin-bottom: 10px; font-size: 28px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -171,7 +154,7 @@
         <button onclick="setSpeed(3)">3x</button>
     </div>
 
-    <div id="score-board">Score: 0 | High: <span id="high-score">0</span></div>
+    <div id="score-board">SCORE: 0 | BEST: <span id="high-score">0</span></div>
     
     <div id="game-container">
         <div id="dino">
@@ -180,13 +163,12 @@
                 <div class="blaster">
                     <div class="gun-barrel"></div>
                     <div class="gun-tip"></div>
-                    <div class="gun-handle"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div style="margin-top: 15px;"><b>SPACE</b> Jump | <b>S/ENTER</b> Shoot</div>
+    <div style="margin-top: 15px; opacity: 0.6;">[SPACE] JUMP | [S/ENTER] SHOOT</div>
 
     <script>
         const dino = document.getElementById("dino");
@@ -196,6 +178,10 @@
         let score = 0;
         let gameSpeed = 1;
         let isGameOver = false;
+        let jumping = false;
+        let jumpVelocity = 0;
+        let dinoY = 0;
+        const gravity = 0.6;
 
         function setSpeed(s) {
             gameSpeed = s;
@@ -205,95 +191,111 @@
             });
         }
 
+        // Smoother Physics Loop
+        function update() {
+            if (isGameOver) return;
+
+            if (jumping) {
+                jumpVelocity -= gravity;
+                dinoY += jumpVelocity;
+                if (dinoY <= 0) {
+                    dinoY = 0;
+                    jumping = false;
+                }
+            }
+            dino.style.bottom = dinoY + "px";
+            requestAnimationFrame(update);
+        }
+
         document.addEventListener("keydown", (e) => {
-            if (e.code === "Space") jump();
+            if (e.code === "Space" && !jumping) {
+                jumping = true;
+                jumpVelocity = 12;
+            }
             if (e.code === "KeyS" || e.code === "Enter") shoot();
         });
-
-        function jump() {
-            if (!dino.classList.contains("jump-animation") && !isGameOver) {
-                dino.classList.add("jump-animation");
-                setTimeout(() => dino.classList.remove("jump-animation"), 500);
-            }
-        }
 
         function shoot() {
             if (isGameOver) return;
             const bullet = document.createElement("div");
             bullet.classList.add("bullet");
-            
-            // Offset bullet to match gun tip
-            bullet.style.left = "85px";
-            bullet.style.top = (dino.offsetTop + 10) + "px";
+            bullet.style.left = "90px";
+            bullet.style.bottom = (dinoY + 35) + "px";
             container.appendChild(bullet);
 
-            let pos = 85;
-            let timer = setInterval(() => {
-                pos += (12 * gameSpeed);
-                bullet.style.left = pos + "px";
+            let bPos = 90;
+            function moveBullet() {
+                if (isGameOver) { bullet.remove(); return; }
+                bPos += (15 * gameSpeed);
+                bullet.style.left = bPos + "px";
 
-                document.querySelectorAll(".enemy").forEach(en => {
-                    if (checkHit(bullet, en)) {
-                        en.remove();
+                document.querySelectorAll(".covid").forEach(virus => {
+                    if (checkHit(bullet, virus)) {
+                        virus.remove();
                         bullet.remove();
-                        clearInterval(timer);
-                        score += 10;
+                        score += 25;
                         updateUI();
+                        return;
                     }
                 });
 
-                if (pos > 800) { clearInterval(timer); bullet.remove(); }
-            }, 20);
+                if (bPos < 800) requestAnimationFrame(moveBullet);
+                else bullet.remove();
+            }
+            requestAnimationFrame(moveBullet);
         }
 
         function spawn() {
             if (isGameOver) return;
-            const type = Math.random() > 0.6 ? 'enemy' : 'cactus';
+            const type = Math.random() > 0.6 ? 'covid' : 'spike';
             const obj = document.createElement("div");
             obj.classList.add(type);
             
-            let pos = 800;
+            let pos = 850;
             obj.style.left = pos + "px";
-            if (type === 'enemy') obj.style.bottom = (Math.random() * 100 + 30) + "px";
+            if (type === 'covid') obj.style.bottom = (Math.random() * 120 + 40) + "px";
             
             container.appendChild(obj);
 
-            let timer = setInterval(() => {
-                if (isGameOver) { clearInterval(timer); return; }
-                pos -= (7 * gameSpeed);
+            function moveObj() {
+                if (isGameOver) return;
+                pos -= (8 * gameSpeed);
                 obj.style.left = pos + "px";
 
                 if (checkHit(dino, obj)) endGame();
 
-                if (pos < -50) {
-                    clearInterval(timer);
+                if (pos > -60) requestAnimationFrame(moveObj);
+                else {
                     obj.remove();
-                    score++;
+                    score += 5;
                     updateUI();
                 }
-            }, 20);
-
-            setTimeout(spawn, (Math.random() * 1000 + 800) / gameSpeed);
+            }
+            requestAnimationFrame(moveObj);
+            setTimeout(spawn, (Math.random() * 1500 + 800) / gameSpeed);
         }
 
         function checkHit(a, b) {
-            let r1 = a.getBoundingClientRect();
-            let r2 = b.getBoundingClientRect();
+            const r1 = a.getBoundingClientRect();
+            const r2 = b.getBoundingClientRect();
             return !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
         }
 
         function updateUI() {
-            scoreElement.innerHTML = `Score: ${score} | High: ${localStorage.getItem("nerfHS") || 0}`;
+            const hs = localStorage.getItem("covidHS") || 0;
+            scoreElement.innerHTML = `SCORE: ${score} | BEST: ${hs}`;
         }
 
         function endGame() {
             isGameOver = true;
-            let hs = localStorage.getItem("nerfHS") || 0;
-            if (score > hs) localStorage.setItem("nerfHS", score);
-            alert("WASTED! Score: " + score);
+            const hs = localStorage.getItem("covidHS") || 0;
+            if (score > hs) localStorage.setItem("covidHS", score);
+            alert("VACCINE REQUIRED! FINAL SCORE: " + score);
             location.reload();
         }
 
+        updateUI();
+        update();
         spawn();
     </script>
 </body>
