@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Doctor: City Defense</title>
+    <title>Retro Doctor: Neon City</title>
     <style>
         :root {
             --neon-blue: #00f3ff;
@@ -12,6 +12,7 @@
             --covid-red: #ff0033;
             --tp-white: #ffffff;
             --mask-blue: #70d1ff;
+            --window-cyan: #00ffff;
             --bg-color: #050505;
         }
 
@@ -32,12 +33,13 @@
 
         button {
             background: rgba(0, 243, 255, 0.1);
-            border: 1px solid var(--neon-blue);
+            border: 2px solid var(--neon-blue);
             color: var(--neon-blue);
             padding: 8px 16px;
             cursor: pointer;
             text-transform: uppercase;
             font-weight: bold;
+            box-shadow: 0 0 5px var(--neon-blue);
         }
 
         button.active { background: var(--neon-blue); color: black; box-shadow: 0 0 20px var(--neon-blue); }
@@ -46,18 +48,32 @@
             position: relative;
             width: 800px;
             height: 300px;
-            border-bottom: 4px solid var(--neon-blue);
+            border-bottom: 4px solid var(--neon-pink);
             background: #000;
             overflow: hidden;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.2);
         }
 
-        /* Scrolling Buildings */
+        /* Enhanced Buildings & Windows */
         .building {
             position: absolute;
             bottom: 0;
-            border: 1px solid rgba(0, 243, 255, 0.2);
-            background: rgba(0, 243, 255, 0.05);
+            border: 2px solid var(--neon-blue);
+            background: rgba(0, 243, 255, 0.1);
             z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            padding: 5px;
+            gap: 5px;
+            box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.3);
+        }
+
+        .window {
+            width: 8px;
+            height: 8px;
+            background: var(--window-cyan);
+            box-shadow: 0 0 8px var(--window-cyan);
+            border-radius: 1px;
         }
 
         /* Doctor Design */
@@ -78,6 +94,7 @@
             top: 0; left: 11px;
             box-shadow: 0 0 10px var(--neon-pink);
             z-index: 3;
+            background: var(--bg-color);
         }
 
         .mask {
@@ -88,13 +105,7 @@
             border-radius: 2px;
         }
 
-        /* Mask Straps */
-        .strap {
-            position: absolute;
-            width: 8px; height: 1px;
-            background: rgba(255,255,255,0.5);
-            left: -4px;
-        }
+        .strap { position: absolute; width: 8px; height: 1px; background: rgba(255,255,255,0.7); left: -4px; }
         .strap-top { top: 2px; transform: rotate(-20deg); }
         .strap-bottom { bottom: 2px; transform: rotate(20deg); }
 
@@ -103,11 +114,10 @@
             width: 16px; height: 28px;
             background: #fff;
             left: 14px; top: 20px;
-            box-shadow: 0 0 10px #fff;
+            box-shadow: 0 0 15px #fff;
             z-index: 2;
         }
 
-        /* Two Legs */
         .leg {
             position: absolute;
             width: 3px; height: 22px;
@@ -121,17 +131,9 @@
         .running .leg-left { animation: stride 0.4s infinite alternate; }
         .running .leg-right { animation: stride 0.4s infinite alternate-reverse; }
 
-        @keyframes stride {
-            from { transform: rotate(-25deg); }
-            to { transform: rotate(25deg); }
-        }
+        @keyframes stride { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
 
-        .syringe {
-            position: absolute;
-            left: 22px; top: 28px;
-            width: 35px; height: 12px;
-            z-index: 4;
-        }
+        .syringe { position: absolute; left: 22px; top: 28px; width: 35px; height: 12px; z-index: 4; }
         .syringe-barrel { width: 18px; height: 7px; background: rgba(255,255,255,0.3); border: 1px solid var(--neon-blue); position: absolute; }
         .syringe-needle { width: 10px; height: 1px; background: #eee; position: absolute; right: -10px; top: 3px; }
 
@@ -143,6 +145,7 @@
             background: var(--tp-white);
             border: 2px solid var(--neon-blue);
             z-index: 4;
+            box-shadow: 0 0 15px var(--tp-white);
         }
 
         .covid {
@@ -150,19 +153,28 @@
             width: 30px; height: 30px;
             background: var(--covid-red);
             border-radius: 50%;
-            box-shadow: 0 0 15px var(--covid-red);
+            box-shadow: 0 0 20px var(--covid-red);
             z-index: 4;
         }
 
+        /* Vaccine Shot + Trail */
         .vaccine-shot {
             position: absolute;
-            width: 14px; height: 4px;
+            width: 16px; height: 4px;
             background: var(--neon-green);
             box-shadow: 0 0 15px var(--neon-green);
             z-index: 6;
         }
 
-        #score-board { margin-bottom: 10px; font-size: 28px; font-weight: bold; z-index: 10; }
+        .shot-trail {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(to left, var(--neon-green), transparent);
+            opacity: 0.6;
+            z-index: 5;
+        }
+
+        #score-board { margin-bottom: 10px; font-size: 28px; font-weight: bold; text-shadow: 0 0 10px var(--neon-blue); }
     </style>
 </head>
 <body>
@@ -194,7 +206,7 @@
         </div>
     </div>
 
-    <div style="margin-top: 15px; opacity: 0.6;">[SPACE] JUMP | [S/ENTER] VACCINATE</div>
+    <div style="margin-top: 15px; opacity: 0.8; letter-spacing: 2px;">[SPACE] JUMP | [S/ENTER] VACCINATE</div>
 
     <script>
         const doctor = document.getElementById("doctor");
@@ -229,11 +241,7 @@
         }
 
         document.addEventListener("keydown", (e) => {
-            if (e.code === "Space" && !jumping) { 
-                jumping = true; 
-                jumpVelocity = 12; 
-                doctor.classList.remove('running');
-            }
+            if (e.code === "Space" && !jumping) { jumping = true; jumpVelocity = 12; doctor.classList.remove('running'); }
             if (e.code === "KeyS" || e.code === "Enter") shoot();
         });
 
@@ -248,6 +256,16 @@
             let bPos = 110;
             function moveShot() {
                 if (isGameOver) { shot.remove(); return; }
+                
+                // Add Trail Effect
+                const trail = document.createElement("div");
+                trail.classList.add("shot-trail");
+                trail.style.left = bPos + "px";
+                trail.style.bottom = (parseInt(shot.style.bottom) + 1) + "px";
+                trail.style.width = (20 * gameSpeed) + "px";
+                container.appendChild(trail);
+                setTimeout(() => trail.remove(), 100);
+
                 bPos += (16 * gameSpeed);
                 shot.style.left = bPos + "px";
                 document.querySelectorAll(".covid").forEach(v => {
@@ -263,14 +281,25 @@
             if (isGameOver) return;
             const b = document.createElement("div");
             b.classList.add("building");
-            let w = Math.random() * 60 + 40;
-            let h = Math.random() * 150 + 50;
+            let w = Math.random() * 60 + 50;
+            let h = Math.random() * 150 + 60;
             b.style.width = w + "px";
             b.style.height = h + "px";
-            b.style.left = "800px";
-            container.appendChild(b);
+            b.style.left = "850px";
 
-            let pos = 800;
+            // Add Windows
+            const windowCount = Math.floor((h / 20) * 2);
+            for(let i=0; i<windowCount; i++) {
+                const win = document.createElement("div");
+                win.classList.add("window");
+                // Randomize light (some windows are "off")
+                if(Math.random() > 0.3) win.style.opacity = "1";
+                else win.style.opacity = "0.2";
+                b.appendChild(win);
+            }
+
+            container.appendChild(b);
+            let pos = 850;
             function move() {
                 if (isGameOver) return;
                 pos -= (2 * gameSpeed);
@@ -279,7 +308,7 @@
                 else b.remove();
             }
             requestAnimationFrame(move);
-            setTimeout(spawnBuilding, (Math.random() * 2000 + 500) / gameSpeed);
+            setTimeout(spawnBuilding, (Math.random() * 2000 + 600) / gameSpeed);
         }
 
         function spawnHazard() {
@@ -311,15 +340,15 @@
         }
 
         function updateUI() {
-            const hs = localStorage.getItem("docHS_v2") || 0;
+            const hs = localStorage.getItem("retroHS") || 0;
             scoreElement.innerHTML = `VACCINATED: ${score} | BEST: ${hs}`;
         }
 
         function endGame() {
             isGameOver = true;
-            const hs = localStorage.getItem("docHS_v2") || 0;
-            if (score > hs) localStorage.setItem("docHS_v2", score);
-            alert("QUARANTINE BREACHED! Score: " + score);
+            const hs = localStorage.getItem("retroHS") || 0;
+            if (score > hs) localStorage.setItem("retroHS", score);
+            alert("SYSTEM OVERLOAD! Score: " + score);
             location.reload();
         }
 
