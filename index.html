@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Pandemic Runner</title>
+    <title>Vaccine Hero: Neon Pandemic</title>
     <style>
         :root {
             --neon-blue: #00f3ff;
             --neon-pink: #ff00ff;
             --neon-green: #39ff14;
-            --neon-orange: #ff6700;
             --covid-red: #ff0033;
+            --tp-white: #ffffff;
             --bg-color: #050505;
         }
 
@@ -23,15 +23,11 @@
             justify-content: center;
             height: 100vh;
             color: var(--neon-blue);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             overflow: hidden;
         }
 
-        #speed-controls {
-            margin-bottom: 15px;
-            display: flex;
-            gap: 10px;
-        }
+        #speed-controls { margin-bottom: 15px; display: flex; gap: 10px; }
 
         button {
             background: rgba(0, 243, 255, 0.1);
@@ -59,8 +55,8 @@
             overflow: hidden;
         }
 
-        /* Stickman & Gun */
-        #dino {
+        /* Stickman & Syringe */
+        #hero {
             position: absolute;
             bottom: 0;
             left: 60px;
@@ -71,8 +67,7 @@
 
         .stickman-head {
             position: absolute;
-            width: 14px;
-            height: 14px;
+            width: 14px; height: 14px;
             border: 2px solid var(--neon-pink);
             border-radius: 50%;
             top: 0; left: 11px;
@@ -81,66 +76,84 @@
 
         .stickman-body {
             position: absolute;
-            width: 2px;
-            height: 25px;
+            width: 2px; height: 25px;
             background: var(--neon-pink);
             left: 19px; top: 16px;
             box-shadow: 0 0 10px var(--neon-pink);
         }
 
-        .blaster {
+        /* The Syringe */
+        .syringe {
             position: absolute;
-            left: 2px; top: 5px;
-            width: 30px; height: 10px;
+            left: 5px; top: 5px;
+            width: 35px; height: 12px;
         }
 
-        .gun-barrel { width: 22px; height: 6px; background: #555; border: 1px solid var(--neon-green); position: absolute; }
-        .gun-tip { width: 5px; height: 6px; background: var(--neon-orange); position: absolute; right: -5px; }
+        .syringe-barrel {
+            width: 20px; height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--neon-blue);
+            position: absolute;
+        }
 
-        /* Spike Visuals */
-        .spike {
+        .syringe-plunger {
+            width: 10px; height: 2px;
+            background: var(--neon-blue);
+            position: absolute; left: -10px; top: 3px;
+        }
+
+        .syringe-needle {
+            width: 8px; height: 1px;
+            background: #eee;
+            position: absolute; right: -8px; top: 4px;
+        }
+
+        /* Toilet Paper Obstacle */
+        .tp-roll {
             position: absolute;
             bottom: 0;
-            width: 0;
-            height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-bottom: 40px solid var(--neon-blue);
-            filter: drop-shadow(0 0 8px var(--neon-blue));
+            width: 35px; height: 35px;
+            background: var(--tp-white);
+            border-radius: 5px;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 10px var(--tp-white);
         }
 
-        /* COVID-19 Visuals */
+        .tp-roll::after {
+            content: '';
+            position: absolute;
+            width: 10px; height: 10px;
+            background: #ccc;
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* COVID-19 Enemy */
         .covid {
             position: absolute;
-            width: 30px;
-            height: 30px;
+            width: 30px; height: 30px;
             background: var(--covid-red);
             border-radius: 50%;
             box-shadow: 0 0 15px var(--covid-red);
-            animation: pulse 1.5s infinite ease-in-out;
+            animation: pulse 1.2s infinite alternate;
         }
 
-        .covid::before, .covid::after {
-            content: '';
-            position: absolute;
-            background: var(--covid-red);
-            width: 140%; height: 4px;
-            top: 45%; left: -20%;
+        .covid::before {
+            content: 'x'; color: white; font-weight: bold;
+            display: flex; justify-content: center; align-items: center;
+            height: 100%; font-size: 20px;
         }
-        .covid::after { transform: rotate(90deg); }
 
-        .bullet {
+        .vaccine-shot {
             position: absolute;
-            width: 12px; height: 4px;
-            background: var(--neon-orange);
+            width: 15px; height: 4px;
+            background: var(--neon-green);
             border-radius: 2px;
-            box-shadow: 0 0 10px var(--neon-orange);
+            box-shadow: 0 0 12px var(--neon-green);
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
+        @keyframes pulse { from { transform: scale(0.9); } to { transform: scale(1.15); } }
 
         #score-board { margin-bottom: 10px; font-size: 28px; font-weight: bold; }
     </style>
@@ -154,24 +167,25 @@
         <button onclick="setSpeed(3)">3x</button>
     </div>
 
-    <div id="score-board">SCORE: 0 | BEST: <span id="high-score">0</span></div>
+    <div id="score-board">VACCINATED: 0 | BEST: <span id="high-score">0</span></div>
     
     <div id="game-container">
-        <div id="dino">
+        <div id="hero">
             <div class="stickman-head"></div>
             <div class="stickman-body">
-                <div class="blaster">
-                    <div class="gun-barrel"></div>
-                    <div class="gun-tip"></div>
+                <div class="syringe">
+                    <div class="syringe-plunger"></div>
+                    <div class="syringe-barrel"></div>
+                    <div class="syringe-needle"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div style="margin-top: 15px; opacity: 0.6;">[SPACE] JUMP | [S/ENTER] SHOOT</div>
+    <div style="margin-top: 15px; opacity: 0.6;">[SPACE] JUMP | [S/ENTER] VACCINATE</div>
 
     <script>
-        const dino = document.getElementById("dino");
+        const hero = document.getElementById("hero");
         const container = document.getElementById("game-container");
         const scoreElement = document.getElementById("score-board");
         
@@ -180,7 +194,7 @@
         let isGameOver = false;
         let jumping = false;
         let jumpVelocity = 0;
-        let dinoY = 0;
+        let heroY = 0;
         const gravity = 0.6;
 
         function setSpeed(s) {
@@ -191,69 +205,57 @@
             });
         }
 
-        // Smoother Physics Loop
         function update() {
             if (isGameOver) return;
-
             if (jumping) {
                 jumpVelocity -= gravity;
-                dinoY += jumpVelocity;
-                if (dinoY <= 0) {
-                    dinoY = 0;
-                    jumping = false;
-                }
+                heroY += jumpVelocity;
+                if (heroY <= 0) { heroY = 0; jumping = false; }
             }
-            dino.style.bottom = dinoY + "px";
+            hero.style.bottom = heroY + "px";
             requestAnimationFrame(update);
         }
 
         document.addEventListener("keydown", (e) => {
-            if (e.code === "Space" && !jumping) {
-                jumping = true;
-                jumpVelocity = 12;
-            }
+            if (e.code === "Space" && !jumping) { jumping = true; jumpVelocity = 12; }
             if (e.code === "KeyS" || e.code === "Enter") shoot();
         });
 
         function shoot() {
             if (isGameOver) return;
-            const bullet = document.createElement("div");
-            bullet.classList.add("bullet");
-            bullet.style.left = "90px";
-            bullet.style.bottom = (dinoY + 35) + "px";
-            container.appendChild(bullet);
+            const shot = document.createElement("div");
+            shot.classList.add("vaccine-shot");
+            shot.style.left = "100px";
+            shot.style.bottom = (heroY + 35) + "px";
+            container.appendChild(shot);
 
-            let bPos = 90;
-            function moveBullet() {
-                if (isGameOver) { bullet.remove(); return; }
-                bPos += (15 * gameSpeed);
-                bullet.style.left = bPos + "px";
+            let bPos = 100;
+            function moveShot() {
+                if (isGameOver) { shot.remove(); return; }
+                bPos += (16 * gameSpeed);
+                shot.style.left = bPos + "px";
 
                 document.querySelectorAll(".covid").forEach(virus => {
-                    if (checkHit(bullet, virus)) {
-                        virus.remove();
-                        bullet.remove();
-                        score += 25;
-                        updateUI();
-                        return;
+                    if (checkHit(shot, virus)) {
+                        virus.remove(); shot.remove();
+                        score += 50; updateUI(); return;
                     }
                 });
-
-                if (bPos < 800) requestAnimationFrame(moveBullet);
-                else bullet.remove();
+                if (bPos < 800) requestAnimationFrame(moveShot);
+                else shot.remove();
             }
-            requestAnimationFrame(moveBullet);
+            requestAnimationFrame(moveShot);
         }
 
         function spawn() {
             if (isGameOver) return;
-            const type = Math.random() > 0.6 ? 'covid' : 'spike';
+            const type = Math.random() > 0.5 ? 'covid' : 'tp-roll';
             const obj = document.createElement("div");
             obj.classList.add(type);
             
             let pos = 850;
             obj.style.left = pos + "px";
-            if (type === 'covid') obj.style.bottom = (Math.random() * 120 + 40) + "px";
+            if (type === 'covid') obj.style.bottom = (Math.random() * 120 + 50) + "px";
             
             container.appendChild(obj);
 
@@ -262,17 +264,13 @@
                 pos -= (8 * gameSpeed);
                 obj.style.left = pos + "px";
 
-                if (checkHit(dino, obj)) endGame();
+                if (checkHit(hero, obj)) endGame();
 
                 if (pos > -60) requestAnimationFrame(moveObj);
-                else {
-                    obj.remove();
-                    score += 5;
-                    updateUI();
-                }
+                else { obj.remove(); score += 10; updateUI(); }
             }
             requestAnimationFrame(moveObj);
-            setTimeout(spawn, (Math.random() * 1500 + 800) / gameSpeed);
+            setTimeout(spawn, (Math.random() * 1400 + 700) / gameSpeed);
         }
 
         function checkHit(a, b) {
@@ -282,21 +280,19 @@
         }
 
         function updateUI() {
-            const hs = localStorage.getItem("covidHS") || 0;
-            scoreElement.innerHTML = `SCORE: ${score} | BEST: ${hs}`;
+            const hs = localStorage.getItem("vacHS") || 0;
+            scoreElement.innerHTML = `VACCINATED: ${score} | BEST: ${hs}`;
         }
 
         function endGame() {
             isGameOver = true;
-            const hs = localStorage.getItem("covidHS") || 0;
-            if (score > hs) localStorage.setItem("covidHS", score);
-            alert("VACCINE REQUIRED! FINAL SCORE: " + score);
+            const hs = localStorage.getItem("vacHS") || 0;
+            if (score > hs) localStorage.setItem("vacHS", score);
+            alert("QUARANTINE FAILED! Score: " + score);
             location.reload();
         }
 
-        updateUI();
-        update();
-        spawn();
+        updateUI(); update(); spawn();
     </script>
 </body>
 </html>
