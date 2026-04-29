@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Doctor: COVID Defense</title>
+    <title>Mitosis Mayhem</title>
     <style>
         :root {
             --neon-blue: #00f3ff;
@@ -190,7 +190,7 @@
         <button onclick="setSpeed(3)">3x</button>
     </div>
 
-    <div id="score-board">VACCINATED: 0 | BEST: <span id="high-score">0</span></div>
+    <div id="score-board">MITOSIS MAYHEM: 0 | BEST: <span id="high-score">0</span></div>
     
     <div id="game-outer">
         <div id="doctor" class="running">
@@ -347,15 +347,15 @@
         }
 
         function updateUI() {
-            const hs = localStorage.getItem("covidHS_final") || 0;
-            scoreElement.innerHTML = `VACCINATED: ${score} | BEST: ${hs}`;
+            const hs = localStorage.getItem("mitosisMayhemHS") || 0;
+            scoreElement.innerHTML = `MITOSIS MAYHEM: ${score} | BEST: ${hs}`;
         }
 
         function endGame() {
             isGameOver = true;
-            const hs = localStorage.getItem("covidHS_final") || 0;
-            if (score > hs) localStorage.setItem("covidHS_final", score);
-            alert("QUARANTINE BREACHED! Score: " + score);
+            const hs = localStorage.getItem("mitosisMayhemHS") || 0;
+            if (score > hs) localStorage.setItem("mitosisMayhemHS", score);
+            alert("CELL DIVISION OVERLOAD! Score: " + score);
             location.reload();
         }
 
