@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Doctor: City Defense</title>
+    <title>Retro Doctor: COVID Defense</title>
     <style>
         :root {
             --neon-blue: #00f3ff;
             --neon-pink: #ff00ff;
             --neon-green: #39ff14;
-            --covid-red: #ff0033;
+            --covid-red: #ff3131;
             --tp-white: #ffffff;
             --mask-blue: #70d1ff;
             --window-cyan: #00ffff;
@@ -129,7 +129,37 @@
         .syringe-barrel { width: 18px; height: 7px; background: rgba(255,255,255,0.3); border: 1px solid var(--neon-blue); position: absolute; }
         .syringe-needle { width: 10px; height: 1px; background: #eee; position: absolute; right: -10px; top: 3px; }
 
-        /* Projectiles */
+        /* COVID-19 Visuals */
+        .covid {
+            position: absolute;
+            width: 30px; height: 30px;
+            background: var(--covid-red);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--covid-red);
+            z-index: 4;
+            animation: covid-spin 4s linear infinite;
+        }
+
+        .spike-container {
+            position: absolute;
+            width: 100%; height: 100%;
+            top: 0; left: 0;
+        }
+
+        .spike-arm {
+            position: absolute;
+            width: 40px; height: 4px;
+            background: var(--covid-red);
+            top: 50%; left: 50%;
+            margin-top: -2px; margin-left: -20px;
+            border-radius: 2px;
+        }
+
+        @keyframes covid-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         .vaccine-shot {
             position: absolute;
             width: 16px; height: 4px;
@@ -138,15 +168,6 @@
             z-index: 6;
         }
 
-        .shot-trail {
-            position: absolute;
-            height: 2px;
-            background: linear-gradient(to left, var(--neon-green), transparent);
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        /* Hazards */
         .tp-roll {
             position: absolute;
             bottom: 0;
@@ -154,15 +175,7 @@
             background: var(--tp-white);
             border: 2px solid var(--neon-blue);
             z-index: 4;
-        }
-
-        .covid {
-            position: absolute;
-            width: 30px; height: 30px;
-            background: var(--covid-red);
-            border-radius: 50%;
-            box-shadow: 0 0 20px var(--covid-red);
-            z-index: 4;
+            box-shadow: 0 0 10px var(--tp-white);
         }
 
         #score-board { margin-bottom: 10px; font-size: 28px; font-weight: bold; }
@@ -197,7 +210,7 @@
         </div>
     </div>
 
-    <div style="margin-top: 15px; opacity: 0.8;">[SPACE] JUMP | [S/ENTER] VACCINATE (0.7s CD)</div>
+    <div style="margin-top: 15px; opacity: 0.8;">[SPACE] JUMP | [S/ENTER] VACCINATE</div>
 
     <script>
         const doctor = document.getElementById("doctor");
@@ -211,12 +224,8 @@
         let jumpVelocity = 0;
         let doctorY = 0;
         const gravity = 0.6;
-
-        // Shooting restriction
         let lastShotTime = 0;
         const shotCooldown = 700; 
-
-        // Building tracking
         let lastBuildingX = 0;
 
         function setSpeed(s) {
@@ -246,8 +255,8 @@
         function shoot() {
             const now = Date.now();
             if (isGameOver || now - lastShotTime < shotCooldown) return;
-            
             lastShotTime = now;
+            
             const shot = document.createElement("div");
             shot.classList.add("vaccine-shot");
             shot.style.left = "110px";
@@ -257,17 +266,9 @@
             let bPos = 110;
             function moveShot() {
                 if (isGameOver) { shot.remove(); return; }
-                
-                const trail = document.createElement("div");
-                trail.classList.add("shot-trail");
-                trail.style.left = bPos + "px";
-                trail.style.bottom = (parseInt(shot.style.bottom) + 1) + "px";
-                trail.style.width = (20 * gameSpeed) + "px";
-                container.appendChild(trail);
-                setTimeout(() => trail.remove(), 100);
-
                 bPos += (16 * gameSpeed);
                 shot.style.left = bPos + "px";
+                
                 document.querySelectorAll(".covid").forEach(v => {
                     if (checkHit(shot, v)) { v.remove(); shot.remove(); score += 50; updateUI(); }
                 });
@@ -277,50 +278,24 @@
             requestAnimationFrame(moveShot);
         }
 
-        function spawnBuilding() {
-            if (isGameOver) return;
-
-            // Only spawn if last building has moved enough to avoid overlap
-            if (lastBuildingX < 700) { 
-                const b = document.createElement("div");
-                b.classList.add("building");
-                let w = Math.random() * 60 + 60;
-                let h = Math.random() * 150 + 60;
-                b.style.width = w + "px";
-                b.style.height = h + "px";
-                b.style.left = "850px";
-
-                for(let i=0; i<Math.floor((h/20)*2); i++) {
-                    const win = document.createElement("div");
-                    win.classList.add("window");
-                    win.style.opacity = Math.random() > 0.3 ? "1" : "0.2";
-                    b.appendChild(win);
-                }
-
-                container.appendChild(b);
-                let pos = 850;
-                lastBuildingX = 850;
-
-                function move() {
-                    if (isGameOver) return;
-                    pos -= (2 * gameSpeed);
-                    b.style.left = pos + "px";
-                    // Update global tracker for this building's position
-                    if (pos > lastBuildingX - 100) lastBuildingX = pos; 
-                    
-                    if (pos > -w) requestAnimationFrame(move);
-                    else b.remove();
-                }
-                requestAnimationFrame(move);
-            }
-            setTimeout(spawnBuilding, 500 / gameSpeed);
-        }
-
         function spawnHazard() {
             if (isGameOver) return;
             const type = Math.random() > 0.5 ? 'covid' : 'tp-roll';
             const obj = document.createElement("div");
             obj.classList.add(type);
+            
+            if (type === 'covid') {
+                const inner = document.createElement("div");
+                inner.classList.add("spike-container");
+                for(let i=0; i<4; i++) {
+                    const arm = document.createElement("div");
+                    arm.classList.add("spike-arm");
+                    arm.style.transform = `rotate(${i * 45}deg)`;
+                    inner.appendChild(arm);
+                }
+                obj.appendChild(inner);
+            }
+
             let pos = 850;
             obj.style.left = pos + "px";
             if (type === 'covid') obj.style.bottom = (Math.random() * 120 + 60) + "px";
@@ -338,22 +313,49 @@
             setTimeout(spawnHazard, (Math.random() * 1400 + 700) / gameSpeed);
         }
 
+        function spawnBuilding() {
+            if (isGameOver) return;
+            if (lastBuildingX < 650) { 
+                const b = document.createElement("div");
+                b.classList.add("building");
+                let w = Math.random() * 60 + 60, h = Math.random() * 150 + 60;
+                b.style.width = w + "px"; b.style.height = h + "px"; b.style.left = "850px";
+                for(let i=0; i<Math.floor((h/20)*2); i++) {
+                    const win = document.createElement("div");
+                    win.classList.add("window");
+                    win.style.opacity = Math.random() > 0.3 ? "1" : "0.2";
+                    b.appendChild(win);
+                }
+                container.appendChild(b);
+                let pos = 850; lastBuildingX = 850;
+                function move() {
+                    if (isGameOver) return;
+                    pos -= (2 * gameSpeed);
+                    b.style.left = pos + "px";
+                    if (pos > lastBuildingX - 120) lastBuildingX = pos; 
+                    if (pos > -w) requestAnimationFrame(move);
+                    else b.remove();
+                }
+                requestAnimationFrame(move);
+            }
+            setTimeout(spawnBuilding, 400 / gameSpeed);
+        }
+
         function checkHit(a, b) {
-            const r1 = a.getBoundingClientRect();
-            const r2 = b.getBoundingClientRect();
+            const r1 = a.getBoundingClientRect(), r2 = b.getBoundingClientRect();
             return !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
         }
 
         function updateUI() {
-            const hs = localStorage.getItem("retroHS") || 0;
+            const hs = localStorage.getItem("covidHS_final") || 0;
             scoreElement.innerHTML = `VACCINATED: ${score} | BEST: ${hs}`;
         }
 
         function endGame() {
             isGameOver = true;
-            const hs = localStorage.getItem("retroHS") || 0;
-            if (score > hs) localStorage.setItem("retroHS", score);
-            alert("SYSTEM OVERLOAD! Score: " + score);
+            const hs = localStorage.getItem("covidHS_final") || 0;
+            if (score > hs) localStorage.setItem("covidHS_final", score);
+            alert("QUARANTINE BREACHED! Score: " + score);
             location.reload();
         }
 
