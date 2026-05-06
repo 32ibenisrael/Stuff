@@ -3,157 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Game Menu</title>
-    <!-- Basic retro terminal style font import -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Press Start 2P', cursive; /* Apply retro pixel font */
-            background-color: #1a1a2e; /* Dark background */
-            color: #e0e0e0; /* Light grey text */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            overflow: hidden;
-            position: relative;
-        }
-
-        h1 {
-            color: #00ff00; /* Neon green for title */
-            text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-        }
-
-        .menu-container {
-            background-color: rgba(0, 0, 0, 0.7);
-            border: 2px solid #00ffff; /* Cyan border */
-            box-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff;
-            padding: 40px 60px;
-            border-radius: 8px;
-            text-align: center;
-            animation: glitch 1s infinite alternate; /* Simple glitch effect */
-        }
-
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(-2px, -2px); }
-            60% { transform: translate(2px, 2px); }
-            80% { transform: translate(2px, -2px); }
-            100% { transform: translate(0); }
-        }
-
-        .menu-item {
-            padding: 15px 25px;
-            margin: 15px 0;
-            background: none;
-            border: 2px solid #ff00ff; /* Neon pink for buttons */
-            color: #ff00ff;
-            font-size: 1.2em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: block;
-            width: 250px;
-            text-align: center;
-            font-family: 'Press Start 2P', cursive; /* Ensure font is applied to buttons */
-        }
-
-        .menu-item:hover, .menu-item:focus {
-            background-color: #ff00ff;
-            color: #1a1a2e;
-            box-shadow: 0 0 20px #ff00ff;
-            transform: scale(1.05);
-        }
-
-        #game-frame {
-            display: none; /* Hidden by default */
-            width: 100%;
-            height: 100vh;
-            border: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-            background-color: #000;
-        }
-
-        .back-button {
-            display: none; /* Hidden by default */
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 1em;
-            z-index: 1001;
-        }
-
-        .back-button:hover {
-            background-color: #00ff00;
-            color: #1a1a2e;
-            box-shadow: 0 0 15px #00ff00;
-        }
-
-        /* Animated background particles */
-        .particle {
-            position: absolute;
-            background-color: rgba(0, 255, 255, 0.5);
-            border-radius: 50%;
-            opacity: 0;
-            animation: float 10s infinite ease-in-out;
-            z-index: -1;
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0) scale(1); opacity: 0; }
-            50% { opacity: 0.8; }
-            100% { transform: translateY(-100vh) scale(1.2); opacity: 0; }
-        }
-    </style>
-</head>
-<body>
-
-    <div class="menu-container" id="main-menu">
-        <h1>RETRO ARCADE</h1>
-        <!-- Prevent default link behavior with 'return false;' -->
-        <a href="#" class="menu-item" onclick="loadGame('mitosis-mayhem'); return false;">Mitosis Mayhem</a>
-        <a href="#" class="menu-item" onclick="alert('This game is not yet available!'); return false;">Space Blaster</a>
-        <a href="#" class="menu-item" onclick="alert('This game is not yet available!'); return false;">Dungeon Crawler</a>
-        <a href="#" class="menu-item" onclick="alert('Coming soon!'); return false;">More Games...</a>
-    </div>
-
-    <iframe id="game-frame"></iframe>
-    <button class="back-button" onclick="goBackToMenu()">Back to Menu</button>
-
-    <script>
-        const gameFrame = document.getElementById('game-frame');
-        const mainMenu = document.getElementById('main-menu');
-        const backButton = document.querySelector('.back-button');
-
-        function loadGame(gameId) {
-            mainMenu.style.display = 'none';
-            backButton.style.display = 'block';
-            gameFrame.style.display = 'block';
-
-            if (gameId === 'mitosis-mayhem') {
-                // The entire game's HTML, CSS, and JS must be inside this string
-                const gameHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mitosis Mayhem</title>
-    <!-- Ensure the font is also available inside the iframe for consistency -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
             --neon-blue: #00f3ff;
@@ -175,14 +25,9 @@
             justify-content: center;
             height: 100vh;
             color: var(--neon-blue);
-            font-family: 'Segoe UI', sans-serif; /* Keep original font for game elements if desired */
+            font-family: 'Segoe UI', sans-serif;
             overflow: hidden;
         }
-        /* Override specific elements to use the pixel font for game UI if desired */
-        #score-board, #speed-controls button, div[style*="opacity: 0.8"] {
-            font-family: 'Press Start 2P', cursive;
-        }
-
 
         #speed-controls { margin-bottom: 15px; display: flex; gap: 10px; z-index: 10; }
 
@@ -368,7 +213,6 @@
     <div style="margin-top: 15px; opacity: 0.8;">[SPACE] JUMP | [S/ENTER] VACCINATE</div>
 
     <script>
-        // All game-related JavaScript must be here, within the gameHtml string
         const doctor = document.getElementById("doctor");
         const container = document.getElementById("game-outer");
         const scoreElement = document.getElementById("score-board");
@@ -386,13 +230,9 @@
 
         function setSpeed(s) {
             gameSpeed = s;
-            // Select buttons within the current document (iframe)
-            document.querySelectorAll('#speed-controls button').forEach(btn => {
+            document.querySelectorAll('button').forEach(btn => {
                 btn.classList.remove('active');
-                // Use a more precise check if needed, e.g., matching the exact text
-                if (parseFloat(btn.innerText) === s) {
-                    btn.classList.add('active');
-                }
+                if(parseFloat(btn.innerText) === s) btn.classList.add('active');
             });
         }
 
@@ -429,7 +269,6 @@
                 bPos += (16 * gameSpeed);
                 shot.style.left = bPos + "px";
                 
-                // Query for elements within the current document (iframe)
                 document.querySelectorAll(".covid").forEach(v => {
                     if (checkHit(shot, v)) { v.remove(); shot.remove(); score += 50; updateUI(); }
                 });
@@ -451,7 +290,7 @@
                 for(let i=0; i<4; i++) {
                     const arm = document.createElement("div");
                     arm.classList.add("spike-arm");
-                    arm.style.transform = \`rotate(\${i * 45}deg)\`;
+                    arm.style.transform = `rotate(${i * 45}deg)`;
                     inner.appendChild(arm);
                 }
                 obj.appendChild(inner);
@@ -509,7 +348,7 @@
 
         function updateUI() {
             const hs = localStorage.getItem("mitosisMayhemHS") || 0;
-            scoreElement.innerHTML = \`MITOSIS MAYHEM: \${score} | BEST: \${hs}\`;
+            scoreElement.innerHTML = `MITOSIS MAYHEM: ${score} | BEST: ${hs}`;
         }
 
         function endGame() {
@@ -517,42 +356,10 @@
             const hs = localStorage.getItem("mitosisMayhemHS") || 0;
             if (score > hs) localStorage.setItem("mitosisMayhemHS", score);
             alert("CELL DIVISION OVERLOAD! Score: " + score);
-            // Call the goBackToMenu function in the parent window (main menu)
-            parent.goBackToMenu(); 
+            location.reload();
         }
 
-        // Initialize the game
-        updateUI(); 
-        update(); 
-        spawnHazard(); 
-        spawnBuilding();
-    </script>
-</body>
-</html>
-`;
-                gameFrame.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(gameHtml);
-            }
-            // Add other games here in else if blocks
-        }
-
-        function goBackToMenu() {
-            gameFrame.src = 'about:blank'; // Clear the iframe
-            gameFrame.style.display = 'none';
-            backButton.style.display = 'none';
-            mainMenu.style.display = 'block';
-        }
-
-        // Generate background particles for the main menu
-        for (let i = 0; i < 30; i++) {
-            const particle = document.createElement('div');
-            particle.classList.add('particle');
-            particle.style.width = `${Math.random() * 5 + 2}px`;
-            particle.style.height = particle.style.width;
-            particle.style.left = `${Math.random() * 100}vw`;
-            particle.style.bottom = `${Math.random() * 100}vh`;
-            particle.style.animationDelay = `${Math.random() * -10}s`; // Stagger animation start
-            document.body.appendChild(particle);
-        }
+        updateUI(); update(); spawnHazard(); spawnBuilding();
     </script>
 </body>
 </html>
