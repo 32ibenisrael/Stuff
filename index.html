@@ -146,6 +146,7 @@
 
             if (gameId === 'mitosis-mayhem') {
                 // Encode the HTML of your game into a Data URL
+                // The entire game's HTML, CSS, and JS must be inside this string
                 const gameHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -368,6 +369,7 @@
     <div style="margin-top: 15px; opacity: 0.8;">[SPACE] JUMP | [S/ENTER] VACCINATE</div>
 
     <script>
+        // All game-related JavaScript must be here, within the gameHtml string
         const doctor = document.getElementById("doctor");
         const container = document.getElementById("game-outer");
         const scoreElement = document.getElementById("score-board");
@@ -385,9 +387,13 @@
 
         function setSpeed(s) {
             gameSpeed = s;
-            document.querySelectorAll('button').forEach(btn => {
+            // Make sure to querySelectorAll within the iframe's document
+            document.querySelectorAll('#speed-controls button').forEach(btn => {
                 btn.classList.remove('active');
-                if(parseFloat(btn.innerText) === s) btn.classList.add('active');
+                // Ensure comparison is safe, e.g., if innerText is '0.5x'
+                if(btn.innerText.includes(s)) { // Check if button text contains the speed
+                     btn.classList.add('active');
+                }
             });
         }
 
@@ -424,6 +430,7 @@
                 bPos += (16 * gameSpeed);
                 shot.style.left = bPos + "px";
                 
+                // Query for elements within the current document (iframe)
                 document.querySelectorAll(".covid").forEach(v => {
                     if (checkHit(shot, v)) { v.remove(); shot.remove(); score += 50; updateUI(); }
                 });
