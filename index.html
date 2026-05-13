@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Simple Platformer</title>
+    <title>Infinite Colorful Platformer</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #333; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        canvas { background: #555; border: 4px solid #fff; }
+        body { margin: 0; overflow: hidden; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+        canvas { background: linear-gradient(#2c3e50, #000); border: 4px solid #fff; }
     </style>
 </head>
 <body>
@@ -15,51 +15,62 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Game variables
-    let player = { x: 50, y: 300, w: 30, h: 30, dx: 0, dy: 0, jumping: false };
-    let platforms =[
-        { x: 0, y: 350, w: 800, h: 50 }, // Ground
-        { x: 200, y: 250, w: 200, h: 20 },
-        { x: 500, y: 150, w: 200, h: 20 }
-    ];
+    let player = { x: 100, y: 300, w: 30, h: 30, dy: 0, jumping: false, color: "#ff4757" };
+    let platforms =[];
+    let scrollSpeed = 3;
     let gravity = 0.8;
     let keys = {};
 
-    // Controls
+    // Generate initial platforms
+    function initPlatforms() {
+        for (let i = 0; i < 5; i++) {
+            platforms.push({ 
+                x: i * 300, 
+                y: 200 + Math.random() * 150, 
+                w: 200, h: 20, 
+                color: `hsl(${Math.random() * 360}, 70%, 60%)` 
+            });
+        }
+    }
+
     window.addEventListener("keydown", e => keys[e.code] = true);
     window.addEventListener("keyup", e => keys[e.code] = false);
 
     function update() {
-        // Movement
-        if (keys["ArrowLeft"]) player.dx = -5;
-        else if (keys["ArrowRight"]) player.dx = 5;
-        else player.dx = 0;
-
+        // Jump logic
         if (keys["ArrowUp"] && !player.jumping) {
             player.dy = -15;
             player.jumping = true;
         }
 
-        // Apply Gravity
         player.dy += gravity;
-        player.x += player.dx;
         player.y += player.dy;
 
-        // Collision detection
-        player.jumping = true;
+        // Scroll platforms and recycle them
         for (let p of platforms) {
+            p.x -= scrollSpeed;
+            
+            // Collision
             if (player.x < p.x + p.w && player.x + player.w > p.x &&
                 player.y + player.h > p.y && player.y + player.h < p.y + p.h + player.dy) {
                 player.y = p.y - player.h;
                 player.dy = 0;
                 player.jumping = false;
             }
+
+            // Recycle platform
+            if (p.x + p.w < 0) {
+                p.x = canvas.width;
+                p.y = 100 + Math.random() * 250;
+                p.color = `hsl(${Math.random() * 360}, 70%, 60%)`;
+            }
         }
 
-        // Keep in bounds
-        if (player.x < 0) player.x = 0;
-        if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
-        if (player.y > canvas.height) { player.x = 50; player.y = 300; } // Reset if fall
+        // Game Over check
+        if (player.y > canvas.height) {
+            player.y = 100;
+            player.dy = 0;
+        }
 
         draw();
         requestAnimationFrame(update);
@@ -68,17 +79,18 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Draw Player
-        ctx.fillStyle = "#ff4757";
-        ctx.fillRect(player.x, player.y, player.w, player.h);
-
         // Draw Platforms
-        ctx.fillStyle = "#2ed573";
         for (let p of platforms) {
+            ctx.fillStyle = p.color;
             ctx.fillRect(p.x, p.y, p.w, p.h);
         }
+
+        // Draw Player
+        ctx.fillStyle = player.color;
+        ctx.fillRect(player.x, player.y, player.w, player.h);
     }
 
+    initPlatforms();
     update();
 </script>
 </body>
