@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Infinite Colorful Platformer</title>
+    <title>High-Speed Platformer</title>
     <style>
         body { margin: 0; overflow: hidden; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
         canvas { background: linear-gradient(#2c3e50, #000); border: 4px solid #fff; }
@@ -17,17 +17,19 @@
 
     let player = { x: 100, y: 300, w: 30, h: 30, dy: 0, jumping: false, color: "#ff4757" };
     let platforms =[];
-    let scrollSpeed = 3;
-    let gravity = 0.8;
+    
+    // Adjusted Constants for speed and jump
+    let scrollSpeed = 5; 
+    let gravity = 0.9;
+    let jumpPower = -18; 
     let keys = {};
 
-    // Generate initial platforms
     function initPlatforms() {
         for (let i = 0; i < 5; i++) {
             platforms.push({ 
-                x: i * 300, 
+                x: i * 350, 
                 y: 200 + Math.random() * 150, 
-                w: 200, h: 20, 
+                w: 180, h: 20, 
                 color: `hsl(${Math.random() * 360}, 70%, 60%)` 
             });
         }
@@ -39,18 +41,18 @@
     function update() {
         // Jump logic
         if (keys["ArrowUp"] && !player.jumping) {
-            player.dy = -15;
+            player.dy = jumpPower;
             player.jumping = true;
         }
 
         player.dy += gravity;
         player.y += player.dy;
 
-        // Scroll platforms and recycle them
+        // Scroll platforms and recycle
         for (let p of platforms) {
             p.x -= scrollSpeed;
             
-            // Collision
+            // Collision detection
             if (player.x < p.x + p.w && player.x + player.w > p.x &&
                 player.y + player.h > p.y && player.y + player.h < p.y + p.h + player.dy) {
                 player.y = p.y - player.h;
@@ -63,13 +65,17 @@
                 p.x = canvas.width;
                 p.y = 100 + Math.random() * 250;
                 p.color = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                
+                // Gradually increase speed over time
+                scrollSpeed += 0.05; 
             }
         }
 
-        // Game Over check
+        // Game Over / Reset
         if (player.y > canvas.height) {
             player.y = 100;
             player.dy = 0;
+            scrollSpeed = 5; // Reset speed on death
         }
 
         draw();
